@@ -13,9 +13,15 @@ import (
 func SearchFiles(search_path *string, max_age *int, interval *int) {
 	for {
 		filepath.Walk(*search_path, func(path string, f os.FileInfo, err error) error {
-			fmt.Println("file: ", path)
+			// Don't delete directories
+			if f.IsDir() {
+				return nil
+			}
 			age := time.Now().Sub(f.ModTime())
-			fmt.Println("age ", age.Minutes())
+			if age.Minutes() > float64(*max_age) {
+				fmt.Println("deleting obsolote", path)
+				return os.Remove(path)
+			}
 			return nil
 		})
 		time.Sleep(time.Duration(*interval) * time.Second)
